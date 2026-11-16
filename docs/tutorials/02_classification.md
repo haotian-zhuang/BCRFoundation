@@ -1,8 +1,19 @@
 # B cell characteristics prediction
 
-This example fine-tunes BCRFoundation to predict **B cell subtype**, using the
-ready-to-use labels in `adata.obs["celltype_name"]`. It compares RNA-only,
-paired-BCR, individual BCR-chain, and combined RNA–BCR representations.
+Use BCRFoundation to predict tissue origin, disease status, cell subtype, and
+light chain locus type.
+
+| Task | Label column in `adata.obs` |
+| --- | --- |
+| Tissue origin | `tissue_name` |
+| Disease status | `disease_name` |
+| Cell subtype | `celltype_name` |
+| Light chain locus type | `receptor_subtype` |
+
+The example below predicts **B cell subtype**, using the ready-to-use labels in
+`adata.obs["celltype_name"]`. For another task, change `label_column` to the
+corresponding column above. It compares combined RNA–BCR, RNA-only, paired-BCR,
+and individual BCR-chain representations.
 
 First complete [installation](../installation.md) and review the
 [data and checkpoint requirements](../data_and_checkpoints.md). Run the example
@@ -24,6 +35,7 @@ from BCRFoundation.finetune.utils import build_results_dataframe
 
 adata = sc.read_h5ad("data/downstream/IBD-Boland/merged_processed_split.h5ad")
 label_column = "celltype_name"
+split_column = "split_by_sample"
 ```
 
 ## Use the saved splits
@@ -33,7 +45,7 @@ indices in that same labeled-cell order.
 
 ```python
 split_values = adata.obs.loc[
-    adata.obs[label_column].notna(), "split_by_sample"
+    adata.obs[label_column].notna(), split_column
 ].astype("string")
 if split_values.isna().any() or set(split_values.unique()) != {"train", "val", "test"}:
     raise ValueError("Labeled cells must have nonmissing train/val/test split values")
@@ -59,7 +71,7 @@ results, adata_classified = bcrf.finetune.classification.train_classifier(
     checkpoint_path="pretrain_model/foundation_model_best.pt",
     num_epochs=50,
     batch_size=512,
-    modalities=["rna_only", "bcr_only", "bcrl_only", "bcrh_only", "rna_bcr"],
+    modalities=["rna_bcr", "rna_only", "bcr_only", "bcrl_only", "bcrh_only"],
     custom_splits=custom_splits,
     save_splits=False,
     cdr3l_col="IR_VJ_1_junction_aa",
