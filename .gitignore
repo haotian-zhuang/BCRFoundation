@@ -25,6 +25,13 @@ venv/
 *.h5ad
 *.loom
 
+# Published pretrained checkpoint
+!/pretrain_model/foundation_model_best.pt
+
 # Operating-system metadata
 .DS_Store
 Thumbs.db
+
+# Documentation builds
+/docs/_build/
+/.venv-docs/

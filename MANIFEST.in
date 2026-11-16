@@ -5,3 +5,10 @@ recursive-include BCRFoundation *.py
 recursive-exclude * __pycache__
 recursive-exclude * *.pyc
 recursive-exclude * *.pyo
+
+include .readthedocs.yaml
+recursive-include docs *.md *.py *.txt
+recursive-include figure *.png
+prune docs/_build
+
+include pretrain_model/foundation_model_best.pt
