@@ -31,20 +31,16 @@ names, pass those names through `cdr3l_col` and `cdr3h_col` consistently.
 
 ## B cell characteristics prediction inputs
 
-The [characteristics prediction tutorial](tutorials/02_classification.md) uses
-the following observation columns:
+The [characteristics prediction tutorial](tutorials/02_classification.md) shows
+B cell subtype prediction using these observation columns:
 
 | Observation column | Contents |
 | --- | --- |
-| `tissue_name` | Ready-to-use tissue origin labels |
-| `disease_name` | Disease status labels |
-| `celltype_name` | B cell subtype labels |
-| `receptor_subtype` | Light chain locus type labels |
+| `celltype_name` | Ready-to-use B cell subtype labels |
 | `split_by_sample` | Existing sample-based assignments: `train`, `val`, or `test` |
 
-Provide ready-to-use labels; only the target columns for your selected tasks are
-required. Pass `split_column="split_by_sample"` to use the existing sample-based
-assignments. The classifier handles missing labels separately for each task and
+The classifier accepts one label column name and excludes cells with missing
+labels. The tutorial constructs `custom_splits` in that labeled-cell order and
 preserves the supplied split annotations with `save_splits=False`.
 
 ## Zero-shot inputs and evaluation

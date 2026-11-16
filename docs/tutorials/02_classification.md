@@ -1,15 +1,8 @@
 # B cell characteristics prediction
 
-Use BCRFoundation to predict tissue origin, disease status, cell subtype, and
-light chain locus type. Provide the four label columns together to train
-classifiers for all four tasks.
-
-| Task | Label column in `adata.obs` |
-| --- | --- |
-| Tissue origin | `tissue_name` |
-| Disease status | `disease_name` |
-| Cell subtype | `celltype_name` |
-| Light chain locus type | `receptor_subtype` |
+This example fine-tunes BCRFoundation to predict **B cell subtype**, using the
+ready-to-use labels in `adata.obs["celltype_name"]`. It compares RNA-only,
+paired-BCR, individual BCR-chain, and combined RNA–BCR representations.
 
 First complete [installation](../installation.md) and review the
 [data and checkpoint requirements](../data_and_checkpoints.md). Run the example
@@ -18,63 +11,77 @@ from the repository root and replace the input path with your data file.
 ## Load the data
 
 The input should contain processed gene expression, paired CDR3 amino-acid
-sequences, and ready-to-use labels for the tasks you want to predict. This
-example also uses existing `train`, `val`, and `test` assignments in
-`adata.obs["split_by_sample"]`.
+sequences, and B cell subtype labels. This example also uses existing `train`,
+`val`, and `test` assignments in `adata.obs["split_by_sample"]`.
 
 ```python
 from pathlib import Path
 
+import numpy as np
 import scanpy as sc
 import BCRFoundation as bcrf
 from BCRFoundation.finetune.utils import build_results_dataframe
 
 adata = sc.read_h5ad("data/downstream/IBD-Boland/merged_processed_split.h5ad")
+label_column = "celltype_name"
+```
+
+## Use the saved splits
+
+The classifier excludes cells with missing target labels, so construct the split
+indices in that same labeled-cell order.
+
+```python
+split_values = adata.obs.loc[
+    adata.obs[label_column].notna(), "split_by_sample"
+].astype("string")
+if split_values.isna().any() or set(split_values.unique()) != {"train", "val", "test"}:
+    raise ValueError("Labeled cells must have nonmissing train/val/test split values")
+
+split_array = split_values.to_numpy()
+custom_splits = (
+    np.flatnonzero(split_array == "train"),
+    np.flatnonzero(split_array == "val"),
+    np.flatnonzero(split_array == "test"),
+)
 ```
 
 ## Fine-tune the classifiers
 
-Pass the label column names as a list. Each task compares RNA-only, paired-BCR,
-individual BCR-chain, and combined RNA–BCR representations. The function handles
-missing labels and saved split assignments separately for each task.
+Pass one label column name. `save_splits=False` preserves the existing split
+annotations. The classifier with the best validation accuracy is selected for
+each modality.
 
 ```python
 results, adata_classified = bcrf.finetune.classification.train_classifier(
     adata,
-    label_column=["tissue_name", "disease_name", "celltype_name", "receptor_subtype"],
+    label_column=label_column,
     checkpoint_path="pretrain_model/foundation_model_best.pt",
     num_epochs=50,
     batch_size=512,
     modalities=["rna_only", "bcr_only", "bcrl_only", "bcrh_only", "rna_bcr"],
-    split_column="split_by_sample",
+    custom_splits=custom_splits,
     save_splits=False,
     cdr3l_col="IR_VJ_1_junction_aa",
     cdr3h_col="IR_VDJ_1_junction_aa",
-    save_dir="models/IBD-Boland/classification",
+    save_dir="models/IBD-Boland/classification/celltype",
 )
 ```
 
-Keep only the labels you need to run fewer tasks. Models are saved in a separate
-subdirectory for each label column. The classifier with the best validation
-accuracy is selected for each task and modality.
-
 ## Inspect and save the results
 
-`results` is keyed by label column, then by modality. Each split's metrics contain
-accuracy, macro F1, and weighted F1. For example, inspect cell subtype prediction:
+`results` is keyed by modality. Each split's metrics contain accuracy, macro F1,
+and weighted F1. The returned AnnData contains the subtype predictions and
+embeddings.
 
 ```python
-cell_subtype_metrics = build_results_dataframe(results["celltype_name"])
-print(cell_subtype_metrics)
-```
+metrics = build_results_dataframe(results)
+print(metrics)
 
-`adata_classified` contains the embeddings and predictions for all selected
-tasks. Save them together:
-
-```python
-output_dir = Path("outputs/IBD-Boland/classification")
+output_dir = Path("outputs/IBD-Boland/classification/celltype")
 output_dir.mkdir(parents=True, exist_ok=True)
-adata_classified.write_h5ad(output_dir / "adata_with_characteristic_predictions.h5ad")
+metrics.to_csv(output_dir / "celltype_results.csv", index=False)
+adata_classified.write_h5ad(output_dir / "adata_with_celltype_predictions.h5ad")
 ```
 
 For [zero-shot RNA evaluation](03_BCR2RNA.md), reload the original processed
