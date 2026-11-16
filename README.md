@@ -1,8 +1,6 @@
 # BCRFoundation
 
 [![Documentation Status](https://readthedocs.org/projects/BCRFoundation/badge/?version=latest)](https://BCRFoundation.readthedocs.io/en/latest/?badge=latest)
-[![PyPI version](https://badge.fury.io/py/BCRFoundation.svg)](https://badge.fury.io/py/BCRFoundation)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/BCRFoundation?period=total&units=ABBREVIATION&left_color=GREY&right_color=ORANGE&left_text=downloads)](https://pepy.tech/projects/BCRFoundation)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
@@ -11,6 +9,10 @@
 ## Overview
 
 BCRFoundation integrates gene expression and BCR sequences (light and heavy chains) from paired single-cell measurements through self-supervised pretraining with masked reconstruction and cross-modal contrastive learning.
+
+[![Figure 1. Overview of BCRFoundation.](figure/Figure1.png)](figure/Figure1.pdf)
+
+*Figure 1. Overview of BCRFoundation. Click the image to view the PDF.*
 
 ### Input and Pretraining Architecture
 
@@ -26,13 +28,7 @@ The pretrained model supports three downstream applications:
 
 ## Installation
 
-### From PyPI (Recommended)
-
-```bash
-pip install BCRFoundation
-```
-
-### From Source
+### From GitHub
 
 ```bash
 git clone https://github.com/haotian-zhuang/BCRFoundation.git
