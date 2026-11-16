@@ -25,7 +25,7 @@ for downstream analyses.
 Detailed tutorials are available at this [website](https://haotian-zhuang.github.io/BCRFoundation/).
 
 1. [Pretraining](https://haotian-zhuang.github.io/BCRFoundation/tutorials/01_pretraining.html)
-2. [Cell-type classification](https://haotian-zhuang.github.io/BCRFoundation/tutorials/02_classification.html)
+2. [B cell characteristics prediction](https://haotian-zhuang.github.io/BCRFoundation/tutorials/02_classification.html)
 3. [Zero-shot BCR-to-RNA prediction](https://haotian-zhuang.github.io/BCRFoundation/tutorials/03_BCR2RNA.html)
 
 See [data and checkpoint requirements](https://haotian-zhuang.github.io/BCRFoundation/data_and_checkpoints.html) before running

@@ -83,6 +83,6 @@ loss_history.to_csv("models/pretraining/pretrain_loss.csv", index=True)
 print(loss_history.tail())
 ```
 
-To use this new checkpoint in [cell-type classification](02_classification.md)
+To use this new checkpoint in [B cell characteristics prediction](02_classification.md)
 or [zero-shot BCR-to-RNA prediction](03_BCR2RNA.md), set that tutorial's
 `checkpoint_path` to `"models/pretraining/foundation_model_best.pt"`.

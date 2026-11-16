@@ -45,5 +45,5 @@ Then prepare your [data and checkpoint](data_and_checkpoints.md), and choose a
 tutorial:
 
 - [Pretraining](tutorials/01_pretraining.md)
-- [Cell-type classification](tutorials/02_classification.md)
+- [B cell characteristics prediction](tutorials/02_classification.md)
 - [Zero-shot BCR-to-RNA prediction](tutorials/03_BCR2RNA.md)

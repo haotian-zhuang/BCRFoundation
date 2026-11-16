@@ -29,19 +29,27 @@ matrix; they do not perform normalization or log transformation for you.
 The tutorial column names follow the analyses. If your BCR columns have different
 names, pass those names through `cdr3l_col` and `cdr3h_col` consistently.
 
-## Cell-type classification inputs
+## B cell characteristics prediction inputs
 
-The classification tutorial additionally expects:
+The [characteristics prediction tutorial](tutorials/02_classification.md) uses
+the following observation columns:
 
 | Observation column | Contents |
 | --- | --- |
-| `celltype_name` | Cell-type labels |
+| `tissue_name` | Tissue origin: `PBMC`, `Ileum`, or `Rectum` |
+| `disease_name` | Disease status labels |
+| `celltype_name` | B cell subtype labels |
+| `receptor_subtype` | Light chain locus type labels |
 | `split_by_sample` | Existing sample-based assignments: `train`, `val`, or `test` |
 
-The classifier excludes cells with missing labels. Its custom split indices must
-therefore refer to the remaining labeled cells in their original order. The
-tutorial constructs the indices in that order and preserves the supplied split
-annotations with `save_splits=False`.
+For tissue prediction, the tutorial merges `Ileum` and `Rectum` into `Intestine`
+and retains the original labels in `tissue_name_original`. The other targets use
+their existing labels. Only the target columns for the tasks you run are required.
+
+The classifier excludes cells with a missing label for the selected task. Its
+custom split indices must therefore refer to the remaining labeled cells in
+their original order. The tutorial constructs these indices separately for each
+task and preserves the supplied split annotations with `save_splits=False`.
 
 ## Zero-shot inputs and evaluation
 
