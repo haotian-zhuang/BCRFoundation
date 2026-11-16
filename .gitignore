@@ -1,0 +1,30 @@
+# Python caches and generated packaging files
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Local environments and credentials
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Local research data and training outputs
+/data/
+/models/
+/checkpoints/
+/outputs/
+/logs/
+*.pt
+*.pth
+*.ckpt
+*.h5ad
+*.loom
+
+# Operating-system metadata
+.DS_Store
+Thumbs.db
