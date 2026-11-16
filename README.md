@@ -1,5 +1,6 @@
 # BCRFoundation
 
+[![Version 1.0.0](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/haotian-zhuang/BCRFoundation/blob/main/pyproject.toml)
 [![Documentation](https://img.shields.io/badge/docs-tutorials-157d85)](https://haotian-zhuang.github.io/BCRFoundation/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11.15+](https://img.shields.io/badge/python-3.11.15+-blue.svg)](https://www.python.org/downloads/)
