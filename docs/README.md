@@ -20,20 +20,25 @@ Open `http://localhost:8000` in your browser. If building on an HPC server, forw
 port 8000 to your own computer. The generated `docs/_build/` directory is ignored
 by Git.
 
-## Publish on Read the Docs
+## Publish on GitHub Pages
 
-1. Commit and push the documentation source and `.readthedocs.yaml` to GitHub.
-2. Sign in to [Read the Docs](https://app.readthedocs.org/) with the GitHub account
-   that manages `haotian-zhuang/BCRFoundation`.
-3. Select **Add project** and choose that repository. Grant the Read the Docs
-   GitHub App access to the repository if requested.
-4. Use `main` as the default branch and the root `.readthedocs.yaml` configuration.
-   Choose the project slug `bcrfoundation` if it is available.
-5. Run the first build and check its published URL. After it succeeds, update the
-   README documentation badge/link to the confirmed hosted URL.
+The workflow in `.github/workflows/docs.yml` builds the documentation and deploys
+it to GitHub Pages. To enable publishing once:
 
-Read the Docs installs only `docs/requirements.txt` for this build. It does not
-need PyTorch, the analysis environment, research datasets, or model weights.
+1. Open the repository's [Pages settings](https://github.com/haotian-zhuang/BCRFoundation/settings/pages).
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Open [Actions → Documentation](https://github.com/haotian-zhuang/BCRFoundation/actions/workflows/docs.yml),
+   select **Run workflow**, choose `main`, and click **Run workflow**.
+4. After both jobs succeed, open
+   <https://haotian-zhuang.github.io/BCRFoundation/>.
 
-See the official [project setup guide](https://docs.readthedocs.com/platform/stable/intro/add-project.html)
-and [configuration reference](https://docs.readthedocs.com/platform/stable/config-file/v2.html).
+Subsequent changes to the documentation, figure, package metadata, or workflow on
+`main` publish automatically. Pull requests build the documentation without
+deploying it. You can also use **Run workflow** to rebuild manually.
+
+The workflow installs only `docs/requirements.txt`. It uploads the generated
+HTML site, without research datasets or model weights, and does not execute the
+tutorial examples.
+
+See GitHub's [publishing source guide](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
+and [custom workflow guide](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).

@@ -21,6 +21,7 @@ nitpicky = True
 
 html_theme = "furo"
 html_title = "BCRFoundation Documentation"
+html_baseurl = "https://haotian-zhuang.github.io/BCRFoundation/"
 html_theme_options = {
     "source_repository": "https://github.com/haotian-zhuang/BCRFoundation/",
     "source_branch": "main",
