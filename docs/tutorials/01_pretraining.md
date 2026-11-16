@@ -1,4 +1,4 @@
-# Tutorial 1: Pretraining BCRFoundation
+# Pretraining BCRFoundation
 
 Train a foundation model using the settings from the scPAIRB pretraining
 analysis. If you already have a compatible pretrained checkpoint, you can start

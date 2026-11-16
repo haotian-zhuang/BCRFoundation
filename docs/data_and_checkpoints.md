@@ -36,20 +36,16 @@ the following observation columns:
 
 | Observation column | Contents |
 | --- | --- |
-| `tissue_name` | Tissue origin: `PBMC`, `Ileum`, or `Rectum` |
+| `tissue_name` | Ready-to-use tissue origin labels |
 | `disease_name` | Disease status labels |
 | `celltype_name` | B cell subtype labels |
 | `receptor_subtype` | Light chain locus type labels |
 | `split_by_sample` | Existing sample-based assignments: `train`, `val`, or `test` |
 
-For tissue prediction, the tutorial merges `Ileum` and `Rectum` into `Intestine`
-and retains the original labels in `tissue_name_original`. The other targets use
-their existing labels. Only the target columns for the tasks you run are required.
-
-The classifier excludes cells with a missing label for the selected task. Its
-custom split indices must therefore refer to the remaining labeled cells in
-their original order. The tutorial constructs these indices separately for each
-task and preserves the supplied split annotations with `save_splits=False`.
+Provide ready-to-use labels; only the target columns for your selected tasks are
+required. Pass `split_column="split_by_sample"` to use the existing sample-based
+assignments. The classifier handles missing labels separately for each task and
+preserves the supplied split annotations with `save_splits=False`.
 
 ## Zero-shot inputs and evaluation
 

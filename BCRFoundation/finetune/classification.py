@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from tqdm import tqdm
 import scanpy as sc
 import os
+import re
 import shutil
 from typing import Dict, Tuple, List, Any
 # Import from your pretrain module
@@ -376,7 +377,152 @@ def extract_embeddings_and_predictions(adata, checkpoint_path, model_paths,
 
     return adata
 
-def train_classifier(adata, label_column: str, checkpoint_path: str, 
+def train_classifier(adata, label_column, checkpoint_path: str,
+                    num_epochs: int = 50, batch_size: int = 64,
+                    modalities = ['rna_only', 'bcr_only', 'bcrl_only', 'bcrh_only', 'rna_bcr'], embeddings = True,
+                    custom_splits = None, save_splits = True,
+                    return_training_history: bool = False,
+                    cdr3l_col: str = "CDR3l", cdr3h_col: str = "CDR3h",
+                    save_dir: str = "../fine_tune_models/classification",
+                    split_column: str = None) -> Tuple[Dict[str, Any], Any]:
+    """Fine-tune independent classifiers for one or more observation columns.
+
+    ``label_column`` may be one column name or a one-dimensional sequence of
+    names, such as a list, tuple, NumPy array, or pandas Index. A string returns
+    ``(results_by_modality, annotated_adata)``. A sequence returns
+    ``(results_by_label, annotated_adata)``, where each label maps to its modality
+    results. With ``embeddings=True``, the AnnData contains every task's
+    embeddings and predictions.
+    The caller's AnnData is not modified, and labels are used without recoding.
+
+    ``split_column`` names an observation column containing ``train``, ``val``,
+    and ``test`` assignments. Indices are constructed independently after
+    excluding missing labels for each task. All three groups must be present,
+    and labeled cells cannot have missing or unknown split assignments. This
+    option cannot be combined with ``custom_splits``. Existing custom index
+    tuples still refer to the nonmissing-label subset; when sharing one tuple
+    across multiple tasks, their nonmissing-label masks must be identical.
+
+    With multiple labels, models are stored in label-specific subdirectories
+    of ``save_dir``. If ``save_splits=True``, assignments are saved as
+    ``<normalized_label>_split`` and any existing ``split`` column is preserved.
+    A string retains the original model directory and ``split`` column behavior.
+    """
+    multiple = not isinstance(label_column, str)
+    if multiple:
+        try:
+            values = np.asarray(label_column, dtype=object)
+        except (TypeError, ValueError) as exc:
+            raise TypeError("label_column must be a string or a 1-D sequence of strings") from exc
+        if values.ndim != 1:
+            raise TypeError("label_column must be a string or a 1-D sequence of strings")
+        labels = values.tolist()
+    else:
+        labels = [label_column]
+    if not labels:
+        raise ValueError("label_column must contain at least one column name")
+    if any(not isinstance(label, str) or not label.strip() for label in labels):
+        raise TypeError("Every label column name must be a nonempty string")
+    if len(set(labels)) != len(labels):
+        raise ValueError("label_column contains duplicate column names")
+
+    task_names = []
+    if multiple:
+        for label in labels:
+            if any(char in label for char in ('/', '\\', '\0')) or any(ord(char) < 32 for char in label):
+                raise ValueError(f"Label column name cannot contain path separators or control characters: {label!r}")
+            task_name = re.sub(r"[^a-z0-9_-]+", "_", label.lower()).strip("_")
+            if not task_name:
+                raise ValueError(f"Label column name has no usable task name: {label!r}")
+            task_names.append(task_name)
+        if len(set(task_names)) != len(task_names):
+            raise ValueError("Label column names collide after normalization")
+
+    missing = [label for label in labels if label not in adata.obs.columns]
+    if missing:
+        raise KeyError(f"Missing adata.obs label columns: {missing}")
+    if any(list(adata.obs.columns).count(label) != 1 for label in labels):
+        raise ValueError("Each selected label column must occur exactly once in adata.obs")
+    if split_column is not None:
+        if custom_splits is not None:
+            raise ValueError("Use either split_column or custom_splits, not both")
+        if not isinstance(split_column, str) or not split_column:
+            raise TypeError("split_column must be a nonempty observation column name")
+        if split_column not in adata.obs.columns:
+            raise KeyError(f"Missing adata.obs split column: {split_column!r}")
+        if list(adata.obs.columns).count(split_column) != 1:
+            raise ValueError("The split column must occur exactly once in adata.obs")
+
+    masks = [adata.obs[label].notna().to_numpy() for label in labels]
+    if multiple and custom_splits is not None and any(
+        not np.array_equal(masks[0], mask) for mask in masks[1:]
+    ):
+        raise ValueError(
+            "Shared custom_splits require identical nonmissing-label masks; "
+            "use split_column for tasks with different missing labels"
+        )
+    splits_by_label = {}
+    for label, mask in zip(labels, masks):
+        if not mask.any():
+            raise ValueError(f"Label column {label!r} has no nonmissing labels")
+        splits_by_label[label] = custom_splits
+        if split_column is not None:
+            assignments = adata.obs.loc[mask, split_column].astype("string")
+            if assignments.isna().any() or set(assignments.unique()) != {"train", "val", "test"}:
+                raise ValueError(
+                    f"{label!r}: labeled cells must have nonmissing train/val/test "
+                    f"assignments in {split_column!r}, with all three groups present"
+                )
+            values = assignments.to_numpy()
+            splits_by_label[label] = tuple(
+                np.flatnonzero(values == group) for group in ("train", "val", "test")
+            )
+
+    options = dict(
+        checkpoint_path=checkpoint_path, num_epochs=num_epochs, batch_size=batch_size,
+        modalities=modalities, embeddings=embeddings, save_splits=save_splits,
+        return_training_history=return_training_history,
+        cdr3l_col=cdr3l_col, cdr3h_col=cdr3h_col,
+    )
+    if not multiple:
+        return _train_single_classifier(
+            adata, label_column=labels[0], custom_splits=splits_by_label[labels[0]],
+            save_dir=save_dir, **options,
+        )
+
+    results_by_label = {}
+    combined = None
+    for label, task_name in zip(labels, task_names):
+        results, annotated = _train_single_classifier(
+            adata, label_column=label, custom_splits=splits_by_label[label],
+            save_dir=os.path.join(save_dir, task_name), **options,
+        )
+        results_by_label[label] = results
+        if combined is None:
+            combined = annotated
+        else:
+            if not annotated.obs_names.equals(combined.obs_names) or not annotated.var_names.equals(combined.var_names):
+                raise ValueError("Classifier outputs must use the same cells and aligned genes")
+            prefix = label.lower().replace(' ', '_')
+            for mode in modalities:
+                prediction_key = f'{prefix}_{mode}_pred'
+                embedding_key = f'X_{prefix}_{mode}_emb'
+                if prediction_key in annotated.obs:
+                    combined.obs[prediction_key] = annotated.obs[prediction_key].copy()
+                if embedding_key in annotated.obsm:
+                    combined.obsm[embedding_key] = annotated.obsm[embedding_key].copy()
+        if save_splits:
+            combined.obs[f'{task_name}_split'] = annotated.obs['split'].copy()
+
+    if save_splits:
+        if 'split' in adata.obs:
+            combined.obs['split'] = adata.obs['split'].copy()
+        else:
+            combined.obs.drop(columns=['split'], inplace=True)
+    return results_by_label, combined
+
+
+def _train_single_classifier(adata, label_column: str, checkpoint_path: str,
                     num_epochs: int = 50, batch_size: int = 64, 
                     modalities = ['rna_only', 'bcr_only', 'bcrl_only', 'bcrh_only', 'rna_bcr'], embeddings = True, 
                     custom_splits = None, save_splits = True,

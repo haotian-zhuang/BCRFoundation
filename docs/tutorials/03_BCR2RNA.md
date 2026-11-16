@@ -1,4 +1,4 @@
-# Tutorial 3: Zero-Shot BCR-to-RNA Prediction
+# Zero-Shot BCR-to-RNA Prediction
 
 Predict gene expression from paired BCR sequences using frozen pretrained
 weights. This reproduces the IBD-Boland zero-shot analysis: evaluate all cells

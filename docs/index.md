@@ -2,8 +2,8 @@
 
 BCRFoundation is a multimodal foundation model pretrained on scPAIRB, a curated
 corpus of over 0.6 million B cells with paired gene expression profiles and BCR
-sequences. These tutorials reproduce the settings used for pretraining and the
-IBD-Boland B cell characteristics prediction and zero-shot BCR-to-RNA analyses.
+sequences. These tutorials cover pretraining, B cell characteristics prediction,
+and zero-shot BCR-to-RNA prediction.
 
 ![Overview of BCRFoundation pretraining and downstream applications.](../figure/Figure1.png)
 
